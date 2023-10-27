@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Select Region of Interest</title>
+    <style>
+        canvas {
+            border: 2px dashed red;
+        }
+    </style>
+</head>
+<body>
+    <h1>Select Region of Interest</h1>
+
+    <h2 id="filename"></h2>
+    
+    <button onclick="performOCR()">Perform OCR</button>
+
+    <canvas id="imageCanvas"></canvas>
+
+    
+
+    <script>
+        var canvas = document.getElementById('imageCanvas');
+        var ctx = canvas.getContext('2d');
+        var image = new Image();
+        var queryString = window.location.search;
+        var urlParams = new URLSearchParams(queryString);
+        var filename = urlParams.get('filename');
+
+        document.getElementById('filename').innerText = 'Filename: ' + filename;
+
+        // Load the image
+        image.onload = function() {
+            canvas.width = image.width;
+            canvas.height = image.height;
+            ctx.drawImage(image, 0, 0);
+        };
+        image.src = '/static/' + filename;
+
+        var startX, startY, endX, endY;
+
+        canvas.addEventListener('mousedown', function(event) {
+            startX = event.offsetX;
+            startY = event.offsetY;
+        });
+
+        canvas.addEventListener('mouseup', function(event) {
+            endX = event.offsetX;
+            endY = event.offsetY;
+            drawSelection();
+        });
+
+        function drawSelection() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(image, 0, 0);
+            var width = endX - startX;
+            var height = endY - startY;
+            ctx.strokeStyle = 'red';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(startX, startY, width, height);
+        }
+
+        function performOCR() {
+            if (!startX || !startY || !endX || !endY) {
+                alert('Please select a region first.');
+                return;
+            }
+
+            // Send the region coordinates to the server for OCR
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '/perform_ocr', true);
+            xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === XMLHttpRequest.DONE) {
+                    if (xhr.status === 200) {
+                        try {
+                            var response = JSON.parse(xhr.responseText);
+                            var ocrText = response.text;
+
+                            // Send OCR text to the parent window
+                            window.opener.postMessage({ type: 'ocrResult', text: ocrText }, '*');
+                            alert(ocrText)
+                            window.close(); // Close the OCR window
+                        } catch (error) {
+                            console.error('Error parsing JSON:', error);
+                            alert('An error occurred while processing the response.');
+                        }
+                    } else {
+                        console.error('Request failed with status:', xhr.status);
+                        alert('An error occurred while performing OCR.');
+                    }
+                }
+            };
+            xhr.send(JSON.stringify({ startX: startX, startY: startY, endX: endX, endY: endY, filename: filename }));
+        }
+    </script>
+</body>
+</html>

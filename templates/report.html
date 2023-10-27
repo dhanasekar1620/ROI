@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Table Data</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 10px;
+        height: 100%;
+      }
+
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        border: 1px solid #749090;
+      }
+
+      th,
+      td {
+        padding: 8px;
+        border: 1px solid #749090;
+      }
+
+      #table-container {
+        height: 100%;
+        overflow: auto;
+      }
+
+      td {
+        text-align: center;
+      }
+
+      h2 {
+        text-align: center;
+      }
+
+      #tablemainhead {
+        background-color: #09569e;
+        color: white;
+      }
+
+      #tablesechead {
+        background-color: #d1e4f5;
+      }
+
+      p {
+        display: flex;
+        justify-content: space-between;
+        padding: 0px 40pc 0px 10px;
+      }
+
+      span {
+        font-weight: 600 !important;
+      }
+
+      hr {
+        height: 2px;
+        background-color: black;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Index Report</h2>
+    <hr />
+    <div id="list-container"></div>
+
+    <div id="table-container"></div>
+  </body>
+  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      // Retrieve parameter values from the URL
+      var uData = JSON.parse(`{{ table_data | tojson}}`);
+      console.log(uData.Name);
+      // Display the values as a list and tables
+      var listContainer = document.getElementById("list-container");
+      var listHTML = "<p>";
+      listHTML += "<span>Name: " + uData.Name + "</span>";
+      listHTML += "<span>Age: " + uData.Age + "</span>";
+      listHTML += "</p>";
+      listHTML += "<p>";
+      listHTML += "<span>Gender:  " + uData.Gender + " </span>";
+      listHTML += "<span>Policy: " + uData.Policy + " </span>";
+      listHTML += "</p>";
+      listHTML += "<p>";
+      listHTML += "<span>DOB: " + uData.DOB + "</span>";
+      listHTML += "</p>";
+
+      listContainer.innerHTML = listHTML;
+
+      var tableContainer = document.getElementById("table-container");
+      var tableHTML = "";
+      tableHTML += "<table>";
+      tableHTML += "<tr><th colspan='5' id='tablemainhead'>Index</th></tr>";
+      tableHTML +=
+        "<tr id='tablesechead'><th>Date</th><th>Facility</th><th>Provider</th><th>Type of Document</th><th>Page</th></tr > ";
+      var maxRows = Math.max(
+        uData.Date.length,
+        uData.Facility.length,
+        uData.Provider.length,
+        uData.DocType.length,
+        uData.Page.length
+      );
+      for (var i = 0; i < maxRows; i++) {
+        tableHTML += "<tr>";
+        tableHTML += "<td>" + (uData.Date[i] || "") + "</td>";
+        tableHTML += "<td>" + (uData.Facility[i] || "") + "</td>";
+        tableHTML += "<td>" + (uData.Provider[i] || "") + "</td>";
+        tableHTML += "<td>" + (uData.DocType[i] || "") + "</td>";
+        tableHTML +=
+          "<td style='color:blue'>" + (uData.Page[i] || "") + "</td>";
+        tableHTML += "</tr>";
+      }
+      tableHTML += "</table>";
+      tableContainer.innerHTML = tableHTML;
+    });
+  </script>
+</html>
